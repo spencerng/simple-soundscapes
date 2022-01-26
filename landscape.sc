@@ -1,7 +1,11 @@
-// s = Server.default; // create a new Server object and assign it to variable s
-// s.boot;
+s = Server.default;
+s.boot;
 
-~playWithOffset = { arg track, offsetAngle, distance;
+// Plays audio at a source directed towards the listener, at a given
+// angle and distance from the front of the listener.
+// Negative angles indicate a source is to the left, and positive angles for sources to the right.
+// There's no differentiation between sources to the front/back
+~playBinaural = { arg track, offsetAngle, distance, loop = 1.0;
     var maxILD = 15.0; // dB
     var maxITD = 0.00066; // seconds
 
@@ -23,21 +27,52 @@
     if ( (offsetAngle < 0),
         // Left side is louder
         {
-            a = { [PlayBuf.ar(1, b) * (gain - dbDecrease).dbamp,
-                PlayBuf.ar(1, b, startPos: delay) * neg(gain + dbDecrease).dbamp]}.play;
+            a = { [PlayBuf.ar(1, b, loop: loop) * (gain - dbDecrease).dbamp,
+                PlayBuf.ar(1, b, startPos: delay, loop: loop) * neg(gain + dbDecrease).dbamp]}.play;
         },
         // Right side is louder
         {
-            a = { [PlayBuf.ar(1, b, startPos: delay) * neg(gain + dbDecrease).dbamp,
-                PlayBuf.ar(1, b) * (gain - dbDecrease).dbamp]}.play;
+            a = { [PlayBuf.ar(1, b, startPos: delay, loop: loop) * neg(gain + dbDecrease).dbamp,
+                PlayBuf.ar(1, b, loop: loop) * (gain - dbDecrease).dbamp]}.play;
         }
     )
 };
 
-~playCoordinates = { arg x, y;
+
+// Plays a sound directed towards a listener, where the
+// source is located at the given xy coordinates
+~playCoords = { arg track, x, y, loop = 0.0;
+    var dist = sqrt(x ** 2 + y ** 2);
+
+    var angle = neg(atan(abs(y)/abs(x)).raddeg - 90);
+    if ( (x < 0), { angle = neg(angle); }, {});
+
+    ~playBinaural.value(track, angle, dist, loop);
+};
+
+// Replace this with where you're cloning your repo
+~path = "C:/users/sng/GitHub/sound-landscape/assets/";
 
 
-}
+~playCoords.value(~path ++ "creek.wav", -15, 15, 1.0);
+~playCoords.value(~path ++ "ducks.wav", -18, 18, 1.0);
+~playCoords.value(~path ++ "footsteps.wav", -20, -13, 1.0);
+
+~playCoords.value(~path ++ "robins.wav", -5, 8, 1.0);
+~playCoords.value(~path ++ "wren.wav", 8, 4, 1.0);
+~playCoords.value(~path ++ "crickets_dog.wav", -12, 3, 1.0);
+
+~playCoords.value(~path ++ "waterfall.wav", 13, 20, 1.0);
 
 
-~playWithOffset.value("C:/users/sng/downloads/05 I want to hold your hand.flac", 80.0, 15.0);
+~playCoords.value(~path ++ "bear.wav", -15, 18);
+
+~playCoords.value(~path ++ "windStrong.wav", 10, 13, 1.0);
+~playCoords.value(~path ++ "squirrel.wav", 4, 10);
+
+~playCoords.value(~path ++ "lightRain.wav", -5, -2, 1.0);
+~playCoords.value(~path ++ "deer.wav", -4, -6);
+~playCoords.value(~path ++ "thunder.wav", 8, -15);
+
+~playCoords.value(~path ++ "thunder.wav", -2, 1);
+~playCoords.value(~path ++ "heavyRain.wav", 5, -5, 1.0);
