@@ -1,34 +1,43 @@
-s = Server.default; // create a new Server object and assign it to variable s
-s.boot;
+// s = Server.default; // create a new Server object and assign it to variable s
+// s.boot;
 
-~playWithOffset = { arg track, offsetAngle;
-    var maxILD = 15.0;
-    var maxITD = 0.2;
-    var b1 = Buffer.readChannel(s, ~track, channels: [0]);
-    var b2 = Buffer.readChannel(s, ~track, channels: [1]);
+~playWithOffset = { arg track, offsetAngle, distance;
+    var maxILD = 15.0; // dB
+    var maxITD = 0.00066; // seconds
+
+    // Decrease in dB due to distance, with baseline
+    // at 0 dB at 4 ft
+    var dbDecrease = abs(20 * log10(4 / distance));
+
+    var b = Buffer.read(s, track).normalize();
+
 
     var angleMap = 0.5 - (offsetAngle / 90 / 2.22);
     var ild = abs(log(angleMap / (1 - angleMap)) * maxILD / 3).postln;
     var gain = ild / 2;
-    var baselineVol = 10 ** (neg(maxILD) / 20);
-    var louderVol = 10 ** (gain / 10) * baselineVol;
-    var softerVol = 10 ** (neg(gain) / 10) * baselineVol;
-    var ratio = (softerVol / (louderVol + softerVol)).postln;
-
+    var difference = neg(ild).dbamp.postln;
 
     var itd = abs(log(angleMap / (1 - angleMap)) * maxITD / 3).postln;
-    var delay = 1 / (1 / ~b1.sampleRate * itd);
+    var delay = itd / ((1 / 48000));
 
     if ( (offsetAngle < 0),
         // Left side is louder
         {
-            a = { [PlayBuf.ar(1, ~b1) * (1 - ratio), PlayBuf.ar(1, ~b2, startPos: ~delay) * ratio]}.play;
+            a = { [PlayBuf.ar(1, b) * (gain - dbDecrease).dbamp,
+                PlayBuf.ar(1, b, startPos: delay) * neg(gain + dbDecrease).dbamp]}.play;
         },
         // Right side is louder
         {
-            a = { [PlayBuf.ar(1, ~b1, startPos: ~delay) * ratio, PlayBuf.ar(1, ~b2) * (1 - ratio)]}.play;
+            a = { [PlayBuf.ar(1, b, startPos: delay) * neg(gain + dbDecrease).dbamp,
+                PlayBuf.ar(1, b) * (gain - dbDecrease).dbamp]}.play;
         }
     )
 };
 
-~playWithOffset.value("C:/users/sng/downloads/05 I want to hold your hand.flac", 80.0);
+~playCoordinates = { arg x, y;
+
+
+}
+
+
+~playWithOffset.value("C:/users/sng/downloads/05 I want to hold your hand.flac", 80.0, 15.0);
