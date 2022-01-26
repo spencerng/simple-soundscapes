@@ -5,7 +5,7 @@ s.boot;
 // angle and distance from the front of the listener.
 // Negative angles indicate a source is to the left, and positive angles for sources to the right.
 // There's no differentiation between sources to the front/back
-~playBinaural = { arg track, offsetAngle, distance, loop = 1.0;
+~playBinaural = { arg track, offsetAngle, distance, loop = 0.0;
     var maxILD = 15.0; // dB
     var maxITD = 0.00066; // seconds
 
@@ -49,4 +49,3 @@ s.boot;
 
     ~playBinaural.value(track, angle, dist, loop);
 };
-
